@@ -1,0 +1,39 @@
+{
+    "name": "foxlogger/server",
+    "description": "A lightweight, high-performance logging server built with PHP and Swoole.",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Morteza Moradi",
+            "email": "moradiemails@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "ext-swoole": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Foxlogger\\Server\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "keywords": [
+        "logging",
+        "logger",
+        "swoole",
+        "php",
+        "performance",
+        "foxlogger"
+    ],
+    "support": {
+        "issues": "https://github.com/foxlogger/issues",
+        "source": "https://github.com/foxlogger/server"
+    }
+}

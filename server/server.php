@@ -1,0 +1,83 @@
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php';
+
+use Foxlogger\Server\LogLevel;
+use Foxlogger\Server\TerminalLogger;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
+use Swoole\WebSocket\Server as WebSocketServer;
+
+class FoxLoggerServer
+{
+    private WebSocketServer $server;
+
+    public function __construct()
+    {
+        $this->server = new WebSocketServer("0.0.0.0", 9501);
+
+        $this->server->set([
+            'open_http2_protocol' => true,
+            'enable_static_handler' => false,
+        ]);
+
+        $this->registerEvents();
+    }
+
+    public function start(): void
+    {
+        $this->server->start();
+    }
+
+    private function registerEvents(): void
+    {
+        $this->server->on('start', function (WebSocketServer $server) {
+            $this->log("Server started on http2://0.0.0.0:9501", LogLevel::Success);
+        });
+
+        $this->server->on('workerStart', function ($server, $workerId) {
+            $this->log("Worker #{$workerId} started", LogLevel::Info);
+        });
+
+        $this->server->on('workerStop', function ($server, $workerId) {
+            $this->log("Worker #{$workerId} stopped", LogLevel::Warning);
+        });
+
+        $this->server->on('request', function (Request $request, Response $response) {
+            $this->log("HTTP request received: " . ($request->server['request_uri'] ?? '/'), LogLevel::Info);
+            $response->header('Content-Type', 'application/json');
+            $response->end(json_encode([
+                'message' => 'Hello from FoxLogger HTTP/2!',
+                'path' => $request->server['request_uri'] ?? '/',
+            ]));
+        });
+
+        $this->server->on('open', function (WebSocketServer $server, $request) {
+            $this->log("WebSocket connection opened: #{$request->fd}", LogLevel::Success);
+        });
+
+        $this->server->on('message', function (WebSocketServer $server, $frame) {
+            $this->log("Received message from #{$frame->fd}: {$frame->data}", LogLevel::Info);
+            $server->push($frame->fd, json_encode([
+                'echo' => $frame->data,
+                'time' => time(),
+            ]));
+        });
+
+        $this->server->on('close', function (WebSocketServer $server, $fd) {
+            $this->log("Connection closed: #{$fd}", LogLevel::Warning);
+        });
+
+        $this->server->on('shutdown', function ($server) {
+            $this->log("Server shutting down...", LogLevel::Error);
+        });
+    }
+
+    private function log(string $title, LogLevel $level = LogLevel::Info): void
+    {
+        TerminalLogger::log($title, $level);
+    }
+}
+
+$logger = new FoxLoggerServer();
+$logger->start();

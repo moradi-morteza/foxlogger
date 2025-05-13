@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: "foxlogger-server"
+    volumes:
+      - ./server:/app
+    ports:
+      - "9051:9501"
+    depends_on:
+      - redis
+      - elasticsearch
+    networks:
+      - foxnet
+
+  redis:
+    image: redis:7-alpine
+    container_name: foxlogger-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - foxnet
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
+    container_name: foxlogger-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    networks:
+      - foxnet
+
+networks:
+  foxnet:
+    driver: bridge
