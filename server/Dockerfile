@@ -1,3 +1,4 @@
+FROM composer:2 as composer
 FROM php:8.2-cli
 
 # Install system dependencies
@@ -10,14 +11,16 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-enable swoole \
     && cd .. && rm -rf swoole-*
 
-# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+RUN composer --version && echo "✅ Composer copied and working."
 
 WORKDIR /app
 
 COPY . .
 
-RUN composer install --no-dev --prefer-dist --optimize-autoloader
+RUN echo "🚀 Running composer install..." && \
+    composer install --no-dev --prefer-dist --optimize-autoloader && \
+    echo "✅ Composer install completed successfully." \
 
 EXPOSE 9501
 

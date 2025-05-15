@@ -12,9 +12,9 @@ class FoxLoggerServer
 {
     private WebSocketServer $server;
 
-    public function __construct()
+    public function __construct(private readonly string $host = '0.0.0.0',private readonly int $port = 9501)
     {
-        $this->server = new WebSocketServer("0.0.0.0", 9501);
+        $this->server = new WebSocketServer($this->host, $this->port);
 
         $this->server->set([
             'open_http2_protocol' => true,
@@ -32,11 +32,11 @@ class FoxLoggerServer
     private function registerEvents(): void
     {
         $this->server->on('start', function (WebSocketServer $server) {
-            $this->log("Server started on http2://0.0.0.0:9501", LogLevel::Success);
+            $this->log("Server started on $this->host:$this->port", LogLevel::Success);
         });
 
         $this->server->on('workerStart', function ($server, $workerId) {
-            $this->log("Worker #{$workerId} started", LogLevel::Info);
+            $this->log("Worker #{$workerId} started");
         });
 
         $this->server->on('workerStop', function ($server, $workerId) {
@@ -44,7 +44,7 @@ class FoxLoggerServer
         });
 
         $this->server->on('request', function (Request $request, Response $response) {
-            $this->log("HTTP request received: " . ($request->server['request_uri'] ?? '/'), LogLevel::Info);
+            $this->log("HTTP request received: " . ($request->server['request_uri'] ?? '/'));
             $response->header('Content-Type', 'application/json');
             $response->end(json_encode([
                 'message' => 'Hello from FoxLogger HTTP/2!',
@@ -57,7 +57,7 @@ class FoxLoggerServer
         });
 
         $this->server->on('message', function (WebSocketServer $server, $frame) {
-            $this->log("Received message from #{$frame->fd}: {$frame->data}", LogLevel::Info);
+            $this->log("Received message from #{$frame->fd}: {$frame->data}");
             $server->push($frame->fd, json_encode([
                 'echo' => $frame->data,
                 'time' => time(),
