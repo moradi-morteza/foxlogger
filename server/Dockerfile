@@ -22,6 +22,6 @@ RUN echo "🚀 Running composer install..." && \
     composer install --no-dev --prefer-dist --optimize-autoloader && \
     echo "✅ Composer install completed successfully." \
 
-EXPOSE 9501
+EXPOSE 7000
 
 CMD ["php", "server.php"]

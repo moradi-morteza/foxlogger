@@ -12,7 +12,7 @@ class FoxLoggerServer
 {
     private WebSocketServer $server;
 
-    public function __construct(private readonly string $host = '0.0.0.0',private readonly int $port = 9501)
+    public function __construct(private readonly string $host,private readonly int $port)
     {
         $this->server = new WebSocketServer($this->host, $this->port);
 
@@ -79,5 +79,5 @@ class FoxLoggerServer
     }
 }
 
-$logger = new FoxLoggerServer();
+$logger = new FoxLoggerServer('0.0.0.0',7000);
 $logger->start();
